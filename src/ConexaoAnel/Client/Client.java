@@ -1,15 +1,13 @@
 package ConexaoAnel.Client;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.net.Socket;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-
-import ConexaoAnel.Handler.InputHandler;
 
 
 public class Client {
@@ -23,57 +21,76 @@ public class Client {
 
     private static Map<Integer, String> logs = new HashMap<>();
 
-    Socket socket = new Socket();
+    private static DatagramSocket socket;
 
     public Client(String ip, int porta){
         this.ip = ip;
         this.porta = porta;
     }
 
-    public void run(){
+    public void run(String ip, int porta){
         try{
-        System.out.println("Cuidaa...");
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Digite o id do processo: (Entre 1, 2, 3 e 4)");
-        int processo = scanner.nextInt();
-        System.out.println("Digite o id do processo que deve receber a mensagem: (Entre 1, 2, 3 e 4)");
-        int praOndeVai = scanner.nextInt();
-        String mensagem = processo + "-" + praOndeVai;
-        Thread t1 = new Thread(() ->{
-            try {
-                socket.send();
-                String log = processo + " sent " + mensagem + " to " + getProximoIdProcesso(processo);
-                System.out.println(log);
-            } catch (Exception e) {
-                // TODO: handle exception
-            }
-        });
-        t1.start();
+            socket = new DatagramSocket();
 
-        Thread t2 = new Thread(() ->{
-            try {
-                socket.receive(packet);
 
-                String received = new String(packet.getData(), 0, packet.getLength());
-                int processId1 = Integer.parseInt(received.split("-")[0]);
-                int number1 = Integer.parseInt(received.split("-")[1]);
+            System.out.println("Cuidaa...");
 
-                String log1 = "Received " + received + " from " + geIdProcessoAnterior(processo);
-                System.out.println(log1);
-                logs.put(processId, logs.getOrDefault(processo, "") + log1 + "\n");
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Digite o id do processo: (Entre 1, 2, 3 e 4)");
+            int processo = scanner.nextInt();
+            
+            System.out.println("Digite o id do processo que deve receber a mensagem: (Entre 1, 2, 3 e 4)");
+            int praOndeVai = scanner.nextInt();
+            
+            String mensagem = processo + "-" + praOndeVai;
+            byte[] dados = mensagem.getBytes();
 
-                socket.close();
-            } catch (Exception e) {
-                // TODO: handle exception
-            }
-        });
+            InetAddress endereco = InetAddress.getByName(ip);
 
-        // Socket socket = new Socket(ip, porta);
-        // saida = new PrintWriter(socket.getOutputStream(), true);
-        // entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        // InputHandler inputhandler = new InputHandler();
-        // Thread t = new Thread(inputhandler);
-        // t.start();
+            DatagramPacket packet = new DatagramPacket(dados, dados.length, endereco, porta);
+
+            Thread t1 = new Thread(() ->{
+                try {
+                    socket.send(packet);
+                    String log = processo + " sent " + mensagem + " to " + getProximoIdProcesso(processo);
+                    System.out.println(log);
+                } catch (SocketException e) {
+                    System.out.println(e);
+                } catch (IOException e){
+                    System.out.println(e);
+                }
+            });
+            t1.start();
+
+            byte[] buffer = new byte[1024];
+            DatagramPacket packet2 = new DatagramPacket(buffer, buffer.length);
+
+            Thread t2 = new Thread(() ->{
+                try {
+                    socket.receive(packet);
+
+                    String received = new String(packet2.getData(), 0, packet2.getLength());
+                    int processo1 = Integer.parseInt(received.split("-")[0]);
+                    int num = Integer.parseInt(received.split("-")[1]);
+
+                    String log1 = "Received " + received + " from " + geIdProcessoAnterior(processo);
+                    System.out.println(log1);
+                    logs.put(processo, logs.getOrDefault(processo1, "") + log1 + "\n");
+
+                    socket.close();
+                } catch (Exception e) {
+                    // TODO: handle exception
+                }
+            });
+            t2.start();
+
+            // Socket socket = new Socket(ip, porta);
+            // saida = new PrintWriter(socket.getOutputStream(), true);
+            // entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            // InputHandler inputhandler = new InputHandler();
+            // Thread t = new Thread(inputhandler);
+            // t.start();
+            scanner.close();
 
         }
         catch(Exception e){
@@ -116,6 +133,6 @@ public class Client {
         String ip = "127.0.0.1";
         int porta = 4096;
         Client cliente = new Client(ip, porta);
-        cliente.run();
+        cliente.run(ip, porta);
     }
 }
