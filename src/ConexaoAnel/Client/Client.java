@@ -41,8 +41,11 @@ public class Client {
             
             System.out.println("Digite o id do processo que deve receber a mensagem: (Entre 1, 2, 3 e 4)");
             int praOndeVai = scanner.nextInt();
+
+            System.out.println("Digite o número que deve ser enviado");
+            int oQueVai = scanner.nextInt();
             
-            String mensagem = processo + "-" + praOndeVai;
+            String mensagem = processo + "-" + oQueVai + "-" + praOndeVai;
             byte[] dados = mensagem.getBytes();
 
             InetAddress endereco = InetAddress.getByName(ip);

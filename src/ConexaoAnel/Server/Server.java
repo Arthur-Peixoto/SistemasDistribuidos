@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import ConexaoAnel.Handler.ClientHandler;
 import ConexaoAnel.Handler.ServerHandler;
 
 public class Server {
@@ -37,22 +36,20 @@ public class Server {
 
             ServerHandler handler = new ServerHandler(socketServer, receivePacket);
 
+            //Quando recebe um pacote, ele cria um objeto ServerHandler
+            // para lidar com o processamento da solicitação.
+
             Thread t1 = new Thread(handler);
             t1.start();
-            // Socket client = socketServer.accept();
-            // ClientHandler handler = new ClientHandler(client);
-            // conexoes.add(handler);
-            // pool.execute(handler);
+
+            //O servidor executa o ServerHandler em uma nova thread para 
+            //lidar com múltiplas solicitações simultaneamente.
+
             }
         } catch (Exception e) {
             System.out.println(e);
-            //shutdown();
         }
     }
-
-    
-
-    
     
 
 }
